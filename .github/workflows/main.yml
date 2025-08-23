@@ -17,6 +17,9 @@ jobs:
     - name: Install backend dependencies
       run: cd backend && npm install
     - name: Run backend tests
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI_TEST }} # Maps the secret to the variable the app expects
+        JWT_SECRET: ${{ secrets.JWT_SECRET }} # Add other secrets here too
       run: cd backend && npm test
     - name: Install frontend dependencies
       run: cd frontend && npm install

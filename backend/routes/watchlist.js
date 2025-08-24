@@ -1,0 +1,31 @@
+const express = require('express');
+const router = express.Router();
+const Watchlist = require('../models/watchlist');
+const auth = require('../middleware/auth');
+
+// Get my watchlist
+router.get('/', auth, async (req, res) => {
+    try {
+        const watchlist = await Watchlist.findOne({ user: req.userId });
+        res.json(watchlist);
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+// Add a stock to my watchlist
+router.post('/add', auth, async (req, res) => {
+    const { stock } = req.body;
+    try {
+        const watchlist = await Watchlist.findOne({ user: req.userId });
+        if (!watchlist.stocks.includes(stock.toUpperCase())) {
+            watchlist.stocks.push(stock.toUpperCase());
+            await watchlist.save();
+        }
+        res.json(watchlist);
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+module.exports = router;

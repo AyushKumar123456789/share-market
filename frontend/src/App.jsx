@@ -1,15 +1,20 @@
 import React from 'react';
-import Signup from './components/Signup';
-import Login from './components/Login';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
 
-const App = () => {
+
+function App() {
   return (
-    <div>
-      <h1>MERN Auth App</h1>
-      <Signup />
-      <Login />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/" element={<DashboardPage />} />
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;

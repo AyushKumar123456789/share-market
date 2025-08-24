@@ -3,12 +3,13 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');//change file name to user.js instead of User.js
+const Watchlist = require('../models/watchlist');
 
 // Signup
 router.post('/signup', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    console.log("signup route is hit!");
+    const {name, email, password } = req.body;
+    console.log("signup route is hit!");//remove it later
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
@@ -17,11 +18,16 @@ router.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const newUser = new User({
+      name: name,
       email: email,
       password: hashedPassword,
     });
 
     await newUser.save();
+
+    // Create a empty watchlist for the new user
+    const watchlist = new Watchlist({ user: newUser._id, stocks: [] });
+    await watchlist.save();
 
     const token = jwt.sign({ email: newUser.email, id: newUser._id }, 'secret', {
       expiresIn: '24h',
@@ -37,7 +43,7 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("login route is hit!");
+    console.log("login route is hit!");//remove it later
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
       return res.status(404).json({ message: 'User not found' });

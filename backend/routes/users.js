@@ -4,6 +4,8 @@ const User = require('../models/user');
 const Watchlist = require('../models/watchlist');
 const Notification = require('../models/notification');
 const auth = require('../middleware/auth');
+const Post = require('../models/post');
+
 
 // Send a friend request
 router.post('/friend-request/:recipientId', auth, async (req, res) => {
@@ -131,5 +133,41 @@ router.get('/suggestions', auth, async (req, res) => { // This method complexity
         res.status(500).json({ message: 'Server Error' });
     }
 });
+
+// GET A USER'S COMPLETE PROFILE
+router.get('/profile/:userId', auth, async (req, res) => {
+    try {
+        const profileUser = await User.findById(req.params.userId).select('-password');
+        if (!profileUser) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        const posts = await Post.find({ user: req.params.userId }).sort({ createdAt: -1 }).populate('user', 'name');
+        const friends = await User.findById(req.params.userId).populate('friends', 'name');
+        const watchlist = await Watchlist.findOne({ user: req.params.userId });
+
+        // Determine friend status with the logged-in user
+        const currentUser = await User.findById(req.userId);
+        let friendStatus = 'not_friends';
+        if (currentUser.friends.includes(req.params.userId)) {
+            friendStatus = 'friends';
+        } else if (profileUser.friendRequests.includes(req.userId)) {
+            friendStatus = 'request_sent';
+        }
+
+        res.json({
+            user: profileUser,
+            posts,
+            friends: friends.friends,
+            watchlist: watchlist ? watchlist.stocks : [],
+            friendStatus,
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 
 module.exports = router;

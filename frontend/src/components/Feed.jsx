@@ -2,13 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
-const PostAction = ({ children }) => (
+export const PostAction = ({ children }) => (
     <button className="flex items-center space-x-2 text-gray-500 hover:text-indigo-600 hover:bg-gray-100 rounded-lg p-2 transition-colors duration-150">
         {children}
     </button>
 );
 
-const PostItem = ({ post }) => (
+export const PostItem = ({ post }) => (
     <div className="bg-white p-4 rounded-xl shadow mb-6">
         <div className="flex items-center mb-3">
             <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold mr-3 uppercase">

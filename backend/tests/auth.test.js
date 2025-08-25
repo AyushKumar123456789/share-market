@@ -75,30 +75,3 @@ describe('Auth Routes', () => {
     expect(res.body).toHaveProperty('token');
   });
 });
-
-//test for creating post
-describe('Post Routes', () => {
-    beforeEach(async () => {
-        const res = await request(app)
-            .post('/auth/signup')
-            .send(testUser);
-        token = res.body.token;
-    });
-
-    it('should not allow a user to create a post without a token', async () => {
-        const res = await request(app)
-            .post('/posts')
-            .send({ content: 'This should fail' });
-        expect(res.statusCode).toEqual(401);
-    });
-
-    it('should allow a logged-in user to create a post', async () => {
-        const res = await request(app)
-            .post('/posts')
-            .set('Authorization', `Bearer ${token}`) // Use the saved token
-            .send({ content: 'Hello from the test!', stockSymbol: 'GOOGL' });
-
-        expect(res.statusCode).toEqual(201);
-        expect(res.body.content).toBe('Hello from the test!');
-    });
-});

@@ -5,7 +5,7 @@ const AuthLayout = ({ children }) => {
     <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
         <h1 className="text-3xl font-bold text-center text-indigo-600 mb-6">
-          StockFolio
+          ShareMarket
         </h1>
         <div className="bg-white p-8 rounded-xl shadow-lg">
           {children}

@@ -74,7 +74,7 @@ const Navbar = () => {
                 <div className="flex items-center space-x-2">
                     <Link to="/" className="text-2xl font-bold text-indigo-600 flex-shrink-0">S</Link>
                     <div className="relative">
-                        <input type="text" placeholder="Search StockFolio" className="bg-gray-100 rounded-full py-2 pl-4 pr-4 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500" value={searchQuery} onChange={onSearchChange} onFocus={() => setIsSearchFocused(true)} onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)} />
+                        <input type="text" placeholder="Search ShareMarket" className="bg-gray-100 rounded-full py-2 pl-4 pr-4 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500" value={searchQuery} onChange={onSearchChange} onFocus={() => setIsSearchFocused(true)} onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)} />
                         {isSearchFocused && searchQuery && (
                             <div className="absolute top-12 w-full bg-white rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
                                 {searchResults.length > 0 ? (

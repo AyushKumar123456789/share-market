@@ -5,8 +5,9 @@ import { AuthContext } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import { PostItem } from '../components/Feed'; 
 
-const ProfileHeader = ({ user, friendStatus, onFriendAction }) => {
+const ProfileHeader = ({ user, friendStatus, onFriendAction, isOwnProfile }) => {
     const renderButton = () => {
+        if (isOwnProfile) return null;
         switch (friendStatus) {
             case 'friends':
                 return <button className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg">Friends</button>;
@@ -22,7 +23,7 @@ const ProfileHeader = ({ user, friendStatus, onFriendAction }) => {
         <div className="bg-white rounded-lg shadow-md p-4">
             <div className="relative h-48 bg-gray-200 rounded-t-lg"> {/* Cover Photo */} </div>
             <div className="flex items-end -mt-16 ml-6">
-                <div className="w-32 h-32 bg-indigo-500 rounded-full border-4 border-white flex items-center justify-center text-5xl text-white font-bold">
+                <div className="w-32 h-32 bg-indigo-500 rounded-full border-4 border-white flex items-center justify-center text-5xl text-white font-bold z-1">
                     {user.name.charAt(0)}
                 </div>
                 <div className="ml-4 flex-grow">
@@ -40,6 +41,7 @@ const ProfilePage = () => {
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('posts');
+    const isOwnProfile = auth.user?._id === userId;
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -74,7 +76,7 @@ const ProfilePage = () => {
         <div className="min-h-screen bg-slate-100">
             <Navbar />
             <div className="container mx-auto p-4 mt-4 max-w-4xl">
-                <ProfileHeader user={user} friendStatus={profileData.friendStatus} onFriendAction={handleFriendAction} />
+                <ProfileHeader user={user} friendStatus={profileData.friendStatus} onFriendAction={handleFriendAction} isOwnProfile={isOwnProfile} />
                 
                 <div className="bg-white rounded-lg shadow-md mt-6 p-4">
                     <div className="flex border-b">

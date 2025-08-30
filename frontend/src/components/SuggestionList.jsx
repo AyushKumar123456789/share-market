@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
@@ -10,8 +10,7 @@ const SuggestionList = () => {
 
     useEffect(() => {
         const fetchSuggestions = async () => {
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            const res = await axios.get('http://localhost:5000/users/suggestions', config);
+            const res = await API.get('/users/suggestions');
             setSuggestions(res.data);
         };
         if (auth.token) fetchSuggestions();
@@ -19,8 +18,7 @@ const SuggestionList = () => {
 
     const handleSendRequest = async (recipientId) => {
         try {
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            await axios.post(`http://localhost:5000/users/friend-request/${recipientId}`, {}, config);
+            await API.post(`/users/friend-request/${recipientId}`);
             setSentRequests([...sentRequests, recipientId]);
         } catch (error) {
             console.error("Failed to send friend request", error);

@@ -1,7 +1,7 @@
 // File: frontend/src/components/Suggestions.jsx
 
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 const Suggestions = () => {
@@ -12,8 +12,7 @@ const Suggestions = () => {
     useEffect(() => {
         const fetchSuggestions = async () => {
             try {
-                const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-                const res = await axios.get('http://localhost:5000/users/suggestions', config);
+                const res = await API.get('/users/suggestions');
                 setSuggestions(res.data);
             } catch (error) {
                 console.error("Failed to fetch suggestions", error);
@@ -27,8 +26,7 @@ const Suggestions = () => {
 
     const handleSendRequest = async (recipientId) => {
         try {
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            await axios.post(`http://localhost:5000/users/friend-request/${recipientId}`, {}, config);
+            await API.post(`/users/friend-request/${recipientId}`);
             
             // Add the user ID to a list of users we've sent a request to for UI feedback
             setSentRequests(prev => [...prev, recipientId]);

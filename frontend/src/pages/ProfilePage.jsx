@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import { PostItem } from '../components/Feed'; 
@@ -14,7 +14,7 @@ const ProfileHeader = ({ user, friendStatus, onFriendAction, isOwnProfile }) => 
             case 'request_sent':
                 return <button className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg">Request Sent</button>;
             case 'not_friends':
-                return <button onClick={onFriendAction} className="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600">Add Friend</button>;
+                return <button onClick={onFriendAction} className="bg-primary text-white font-semibold py-2 px-4 rounded-lg hover:bg-primary-dark">Add Friend</button>;
             default:
                 return null;
         }
@@ -23,7 +23,7 @@ const ProfileHeader = ({ user, friendStatus, onFriendAction, isOwnProfile }) => 
         <div className="bg-white rounded-lg shadow-md p-4">
             <div className="relative h-48 bg-gray-200 rounded-t-lg"> {/* Cover Photo */} </div>
             <div className="flex items-end -mt-16 ml-6">
-                <div className="w-32 h-32 bg-indigo-500 rounded-full border-4 border-white flex items-center justify-center text-5xl text-white font-bold z-1">
+                <div className="w-32 h-32 bg-primary rounded-full border-4 border-white flex items-center justify-center text-5xl text-white font-bold z-1">
                     {user.name.charAt(0)}
                 </div>
                 <div className="ml-4 flex-grow">
@@ -48,8 +48,7 @@ const ProfilePage = () => {
             if (!auth.token || !userId) return;
             try {
                 setLoading(true);
-                const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-                const res = await axios.get(`http://localhost:5000/users/profile/${userId}`, config);
+                const res = await API.get(`/users/profile/${userId}`);
                 setProfileData(res.data);
             } catch (error) { console.error("Failed to fetch profile", error); } 
             finally { setLoading(false); }
@@ -60,8 +59,7 @@ const ProfilePage = () => {
     const handleFriendAction = async () => {
         if (!auth.token || !userId) return;
         try {
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            await axios.post(`http://localhost:5000/users/friend-request/${userId}`, {}, config);
+            await API.post(`/users/friend-request/${userId}`);
             setProfileData(prevData => ({ ...prevData, friendStatus: 'request_sent' }));
         } catch (error) {
             console.error("Failed to send friend request", error);

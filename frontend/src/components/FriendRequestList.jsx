@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
@@ -9,16 +9,14 @@ const FriendRequestList = () => {
 
     useEffect(() => {
         const fetchRequests = async () => {
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            const res = await axios.get('http://localhost:5000/users/friend-requests', config);
+            const res = await API.get('/users/friend-requests');
             setRequests(res.data);
         };
         if (auth.token) fetchRequests();
     }, [auth.token]);
 
     const handleResponse = async (senderId, action) => {
-        const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-        await axios.post(`http://localhost:5000/users/friend-request/${action}/${senderId}`, {}, config);
+        await API.post(`/users/friend-request/${action}/${senderId}`);
         setRequests(requests.filter(req => req._id !== senderId));
     };
 

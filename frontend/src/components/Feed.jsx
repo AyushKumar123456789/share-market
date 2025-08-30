@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import CommentSection from './CommentSection';
@@ -28,8 +28,7 @@ export const PostItem = ({ post, highlightedPost }) => {
         }
         try {
             const endpoint = newHasLiked ? 'like' : 'unlike';
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            await axios.post(`http://localhost:5000/posts/${post._id}/${endpoint}`, {}, config);
+            await API.post(`/posts/${post._id}/${endpoint}`);
         } catch (error) {
             console.error("Failed to update like status", error);
             setHasLiked(!newHasLiked);
@@ -42,8 +41,7 @@ export const PostItem = ({ post, highlightedPost }) => {
         setShowComments(newShowComments);
         if (newShowComments && comments.length === 0) {
             try {
-                const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-                const res = await axios.get(`http://localhost:5000/posts/${post._id}/comments`, config);
+                const res = await API.get(`/posts/${post._id}/comments`);
                 setComments(res.data);
             } catch (error) { console.error("Failed to fetch comments", error); }
         }
@@ -113,8 +111,7 @@ const Feed = () => {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-                const res = await axios.get('http://localhost:5000/posts', config);
+                const res = await API.get('/posts');
                 setPosts(res.data);
             } catch (error) {
                 console.error("Failed to fetch posts", error);

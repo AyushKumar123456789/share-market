@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
@@ -12,8 +12,7 @@ const CommentSection = ({ post, comments, setComments }) => {
         if (!newComment.trim()) return;
 
         try {
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            const res = await axios.post(`http://localhost:5000/posts/${post._id}/comment`, { text: newComment }, config);
+            const res = await API.post(`/posts/${post._id}/comment`, { text: newComment });
             setComments(res.data); // Update comments with the fresh list from the backend
             setNewComment('');
         } catch (error) {

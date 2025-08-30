@@ -1,7 +1,7 @@
 // File: frontend/src/components/Watchlist.jsx
 
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 const Watchlist = () => {
@@ -13,8 +13,7 @@ const Watchlist = () => {
     useEffect(() => {
         const fetchWatchlist = async () => {
             try {
-                const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-                const res = await axios.get('http://localhost:5000/watchlist', config);
+                const res = await API.get('/watchlist');
                 setStocks(res.data.stocks || []);
             } catch (error) {
                 console.error("Failed to fetch watchlist", error);
@@ -33,9 +32,8 @@ const Watchlist = () => {
         if (!newStock.trim()) return;
 
         try {
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
             const body = { stock: newStock.toUpperCase() };
-            const res = await axios.post('http://localhost:5000/watchlist/add', body, config);
+            const res = await API.post('/watchlist/add', body);
             
             setStocks(res.data.stocks); // Update state with the new list from the backend
             setNewStock(''); // Clear the input

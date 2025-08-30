@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useClickOutside } from '../hooks/useClickOutside';
@@ -35,8 +35,7 @@ const Navbar = () => {
     useEffect(() => {
         const fetchNotifications = async () => {
             if(!auth.token) return;
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            const res = await axios.get('http://localhost:5000/notifications', config);
+            const res = await API.get('/notifications');
             setNotifications(res.data);
             setUnreadCount(res.data.filter(n => !n.read).length);
         };
@@ -48,16 +47,14 @@ const Navbar = () => {
         setOpenDropdown('notifications');
         if (unreadCount > 0) {
             setUnreadCount(0);
-            const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-            await axios.post('http://localhost:5000/notifications/read', {}, config);
+            await API.post('/notifications/read');
         }
     };
     
     // eslint-disable-next-line
     const debouncedSearch = useCallback(debounce(async (query) => {
         if (query.trim() === '') { setSearchResults([]); return; }
-        const config = { headers: { Authorization: `Bearer ${auth.token}` } };
-        const res = await axios.get(`http://localhost:5000/users/search?q=${query}`, config);
+        const res = await API.get(`/users/search?q=${query}`);
         setSearchResults(res.data);
     }, 300), [auth.token]);
 

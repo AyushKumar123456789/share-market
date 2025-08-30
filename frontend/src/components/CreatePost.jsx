@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
+import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 const CreatePost = ({ onPostCreated }) => {
@@ -16,16 +16,9 @@ const CreatePost = ({ onPostCreated }) => {
         }
 
         try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${auth.token}`,
-                },
-            };
+            const body = { content, stockSymbol: stockSymbol.toUpperCase() };
 
-            const body = JSON.stringify({ content, stockSymbol: stockSymbol.toUpperCase() });
-
-            await axios.post('http://localhost:5000/posts', body, config);
+            await API.post('/posts', body);
 
             // Clear inputs and call the parent's refresh function
             setContent('');

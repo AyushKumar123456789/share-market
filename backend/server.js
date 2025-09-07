@@ -7,6 +7,9 @@ const postRoutes = require('./routes/posts');
 const watchlistRoutes = require('./routes/watchlist');
 const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
+const chatRoutes = require('./routes/chat');
+const { initializeSocket } = require('./socket/socketHandler');
+const http = require('http');
 
 
 const app = express();
@@ -17,6 +20,7 @@ app.use('/notifications', notificationRoutes);
 app.use('/posts', postRoutes);
 app.use('/watchlist', watchlistRoutes);
 app.use('/users', userRoutes);
+app.use('/chat', chatRoutes);
 const PORT = process.env.PORT || 5000;
 
 
@@ -27,10 +31,18 @@ connection.once('open', () => {
   console.log('MongoDB database connection established successfully');
 });
 
+
 app.get('/', (req, res) => {
   res.send('Backend is running');
 });
+
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+initializeSocket(server);
+
 const HOST = '0.0.0.0';
-app.listen(PORT, HOST, () => {
+
+server.listen(PORT, HOST, () => {
   console.log(`Server is running on port ${PORT}`);
 });

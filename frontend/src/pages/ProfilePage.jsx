@@ -13,17 +13,19 @@ const ProfileHeader = ({ user, friendStatus, onFriendAction, isOwnProfile }) => 
                 return <button className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg">Friends</button>;
             case 'request_sent':
                 return <button className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg">Request Sent</button>;
+            case 'request_received':
+                return <button onClick={onFriendAction} className="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600 cursor-pointer">Accept Request</button>;
             case 'not_friends':
-                return <button onClick={onFriendAction} className="bg-primary text-white font-semibold py-2 px-4 rounded-lg hover:bg-primary-dark">Add Friend</button>;
+                return <button onClick={onFriendAction} className="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600 cursor-pointer">Add Friend</button>;
             default:
                 return null;
         }
     };
     return (
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="bg-white rounded-lg shadow-md p-4 relative ">
             <div className="relative h-48 bg-gray-200 rounded-t-lg"> {/* Cover Photo */} </div>
-            <div className="flex items-end -mt-16 ml-6">
-                <div className="w-32 h-32 bg-primary rounded-full border-4 border-white flex items-center justify-center text-5xl text-white font-bold z-1">
+            <div className="flex items-end -mt-16 ml-6 relative ">
+                <div className="w-32 h-32 bg-indigo-500 rounded-full border-4 border-white flex items-center justify-center text-5xl text-white font-bold">
                     {user.name.charAt(0)}
                 </div>
                 <div className="ml-4 flex-grow">
@@ -60,9 +62,12 @@ const ProfilePage = () => {
         if (!auth.token || !userId) return;
         try {
             await API.post(`/users/friend-request/${userId}`);
-            setProfileData(prevData => ({ ...prevData, friendStatus: 'request_sent' }));
+            // After sending a request, the status will be 'request_sent'
+            // If we were accepting a request, the status would become 'friends'
+            const newStatus = profileData.friendStatus === 'request_received' ? 'friends' : 'request_sent';
+            setProfileData(prevData => ({ ...prevData, friendStatus: newStatus }));
         } catch (error) {
-            console.error("Failed to send friend request", error);
+            console.error("Failed to send/accept friend request", error);
         }
     };
 

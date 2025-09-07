@@ -1,5 +1,3 @@
-// File: frontend/src/pages/FriendsPage.jsx
-
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 // We will create these two new components below

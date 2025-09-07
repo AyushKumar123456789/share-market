@@ -14,6 +14,7 @@ router.post('/friend-request/:recipientId', auth, async (req, res) => {
         if (!recipient) return res.status(404).json({ message: "User not found." });
 
         // Add sender to recipient's friend requests if not already there
+        console.log("recipient : ", recipient);
         if (!recipient.friendRequests.includes(req.userId)) {
             recipient.friendRequests.push(req.userId);
             await recipient.save();
@@ -153,6 +154,8 @@ router.get('/profile/:userId', auth, async (req, res) => {
             friendStatus = 'friends';
         } else if (profileUser.friendRequests.includes(req.userId)) {
             friendStatus = 'request_sent';
+        } else if (currentUser.friendRequests.includes(req.params.userId)) {
+            friendStatus = 'request_received';
         }
 
         res.json({
@@ -163,6 +166,21 @@ router.get('/profile/:userId', auth, async (req, res) => {
             friendStatus,
         });
 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// Get all friends for the logged-in user
+router.get('/friends', auth, async (req, res) => {
+    try {
+        // Find the logged-in user and populate their friends list
+        const user = await User.findById(req.userId).populate('friends', 'name');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        res.json(user.friends);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });

@@ -30,7 +30,7 @@ router.post('/signup', async (req, res) => {
     await watchlist.save();
 
     const token = jwt.sign({ email: newUser.email, id: newUser._id }, 'secret', {
-      expiresIn: '24h',
+      expiresIn: '1h',
     });
 
     res.status(201).json({ result: newUser, token });

@@ -28,4 +28,17 @@ router.post('/add', auth, async (req, res) => {
     }
 });
 
+// Delete a stock from my watchlist
+router.delete('/delete/:symbol', auth, async (req, res) => {
+    const { symbol } = req.params;
+    try {
+        const watchlist = await Watchlist.findOne({ user: req.userId });
+        watchlist.stocks = watchlist.stocks.filter(s => s !== symbol.toUpperCase());
+        await watchlist.save();
+        res.json(watchlist);
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
 module.exports = router;

@@ -8,6 +8,7 @@ const watchlistRoutes = require('./routes/watchlist');
 const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
 const chatRoutes = require('./routes/chat');
+const stockRoutes = require('./routes/stocks');
 const { initializeSocket } = require('./socket/socketHandler');
 const http = require('http');
 
@@ -21,6 +22,7 @@ app.use('/posts', postRoutes);
 app.use('/watchlist', watchlistRoutes);
 app.use('/users', userRoutes);
 app.use('/chat', chatRoutes);
+app.use('/stocks', stockRoutes);
 const PORT = process.env.PORT || 5000;
 
 

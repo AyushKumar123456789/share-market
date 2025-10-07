@@ -18,10 +18,20 @@ router.post('/add', auth, async (req, res) => {
     const { stock } = req.body;
     try {
         const watchlist = await Watchlist.findOne({ user: req.userId });
-        if (!watchlist.stocks.includes(stock.toUpperCase())) {
-            watchlist.stocks.push(stock.toUpperCase());
-            await watchlist.save();
+        //If stock is already in watchlist
+        console.log("userId:", req.userId);
+        //First see if watchlist exists
+        if (!watchlist) {
+            const newWatchlist = new Watchlist({ user: req.userId, stocks: [stock.toUpperCase()] });
+            await newWatchlist.save();
+            return res.json(newWatchlist);
         }
+        if (watchlist.stocks.includes(stock.toUpperCase())) {
+            return res.status(400).json({ message: "Stock already in watchlist" });
+        }
+        //Add stock to watchlist
+        watchlist.stocks.push(stock.toUpperCase());
+        await watchlist.save();
         res.json(watchlist);
     } catch (err) {
         res.status(500).json({ message: "Server Error" });

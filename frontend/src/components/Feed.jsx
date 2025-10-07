@@ -56,7 +56,11 @@ export const PostItem = ({ post, highlightedPost }) => {
     return (
         <div id={`post-${post._id}`} className={`bg-white p-4 rounded-xl shadow mb-6 transition-all duration-1000 ${highlightedPost === post._id ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}`}>
             <div className="flex items-center mb-3">
-                <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold mr-3 uppercase">{post.user?.name?.charAt(0) || 'U'}</div>
+                {post.user?.profilePhoto ? (
+                    <img src={post.user.profilePhoto} alt={post.user.name} className="w-10 h-10 rounded-full mr-3 object-cover" />
+                ) : (
+                    <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold mr-3 uppercase">{post.user?.name?.charAt(0) || 'U'}</div>
+                )}
                 <div>
                     <Link to={`/profile/${post.user._id}`} className="font-semibold text-gray-800 hover:underline">{post.user?.name || 'Anonymous'}</Link>
                     <p className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleString()}</p>

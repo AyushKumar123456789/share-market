@@ -30,9 +30,23 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
         setAuth({ token: null, user: null });
     };
+    // This function allows any component to update the global user state
+    const updateUser = (newUserData) => {
+        setAuth(prevAuth => {
+            if (!prevAuth.user) return prevAuth; // Safety check
+            // Merge new data with existing user data
+            const updatedUser = { ...prevAuth.user, ...newUserData };
+            // Update localStorage so the change persists
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            return {
+                ...prevAuth,
+                user: updatedUser,
+            };
+        });
+    };
 
     return (
-        <AuthContext.Provider value={{ auth, login, logout }}>
+        <AuthContext.Provider value={{ auth, login, logout, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

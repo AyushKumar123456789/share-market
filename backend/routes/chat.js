@@ -8,7 +8,7 @@ const Message = require('../models/message');
 router.get('/conversations', auth, async (req, res) => {
     try {
         const conversations = await Conversation.find({ participants: req.userId })
-            .populate('participants', 'name')
+            .populate('participants', 'name profilePhoto')
             .sort({ updatedAt: -1 });
         res.json(conversations);
     } catch (error) { res.status(500).json({ message: 'Server Error' }); }
@@ -18,7 +18,7 @@ router.get('/conversations', auth, async (req, res) => {
 router.get('/conversations/:id/messages', auth, async (req, res) => {
     try {
         const messages = await Message.find({ conversationId: req.params.id })
-            .populate('sender', 'name');
+            .populate('sender', 'name profilePhoto');
         res.json(messages);
     } catch (error) { res.status(500).json({ message: 'Server Error' }); }
 });

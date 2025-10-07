@@ -20,7 +20,7 @@ router.post('/', auth, async (req, res) => {
 // Get all Posts (for the feed)
 router.get('/', async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name');
+    const posts = await Post.find().sort({ createdAt: -1 }).populate('user', 'name profilePhoto coverPhoto');
     res.status(200).json(posts);
   } catch (error) {
     res.status(404).json({ message: error.message });
@@ -72,7 +72,7 @@ router.post('/:id/comment', auth, async (req, res) => {
         await newComment.save();
 
         // Fetch all comments for the post to return to the client
-        const comments = await Comment.find({ post: req.params.id }).populate('user', 'name').sort({ createdAt: 'asc' });
+        const comments = await Comment.find({ post: req.params.id }).populate('user', 'name profilePhoto coverPhoto').sort({ createdAt: 'asc' });
 
         res.status(201).json(comments);
     } catch (error) {
@@ -84,7 +84,7 @@ router.post('/:id/comment', auth, async (req, res) => {
 // Get all comments for a Post
 router.get('/:id/comments', auth, async (req, res) => {
     try {
-        const comments = await Comment.find({ post: req.params.id }).populate('user', 'name').sort({ createdAt: 'asc' });
+        const comments = await Comment.find({ post: req.params.id }).populate('user', 'name profilePhoto coverPhoto').sort({ createdAt: 'asc' });
         res.status(200).json(comments);
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });

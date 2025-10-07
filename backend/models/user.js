@@ -6,6 +6,8 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  profilePhoto: { type: String, default: '' }, // <-- Added
+  coverPhoto: { type: String, default: '' },   // <-- Added
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

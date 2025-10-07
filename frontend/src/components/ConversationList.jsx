@@ -16,7 +16,11 @@ const ConversationList = ({ conversations, onSelectConversation, selectedConvers
                     const otherUser = getOtherParticipant(convo.participants);
                     return (
                         <li key={convo._id} onClick={() => onSelectConversation(convo)} className={`p-4 flex items-center space-x-3 cursor-pointer hover:bg-gray-100 ${selectedConversationId === convo._id ? 'bg-indigo-50' : ''}`}>
-                            <div className="w-12 h-12 bg-gray-300 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-xl">{otherUser?.name.charAt(0)}</div>
+                            {otherUser?.profilePhoto ? (
+                                <img src={otherUser.profilePhoto} alt={otherUser.name} className="w-12 h-12 rounded-full flex-shrink-0 object-cover" />
+                            ) : (
+                                <div className="w-12 h-12 bg-gray-300 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-xl">{otherUser?.name.charAt(0)}</div>
+                            )}
                             <div className="flex-grow overflow-hidden">
                                 <p className="font-semibold truncate">{otherUser?.name}</p>
                                 <p className="text-sm text-gray-500 truncate">{convo.lastMessage?.text}</p>

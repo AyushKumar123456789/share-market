@@ -36,9 +36,13 @@ const CreatePost = ({ onPostCreated }) => {
         <div className="bg-white p-4 rounded-xl shadow mb-6">
             <form onSubmit={handleSubmit}>
                 <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold uppercase flex-shrink-0">
-                        {auth.user?.name?.charAt(0)}
-                    </div>
+                    {auth.user?.profilePhoto ? (
+                        <img src={auth.user.profilePhoto} alt={auth.user.name} className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                        <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold uppercase flex-shrink-0">
+                            {auth.user?.name?.charAt(0)}
+                        </div>
+                    )}
                     <div className="w-full">
                         <textarea
                             className="w-full border-none rounded-lg p-2 text-gray-700 bg-gray-100 focus:ring-2 focus:ring-indigo-500"

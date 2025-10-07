@@ -5,8 +5,11 @@ import { AuthContext } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import { PostItem } from '../components/Feed'; 
 import Watchlist from '../components/Watchlist';
+import EditProfileModal from '../components/EditProfileModal';
 
-const ProfileHeader = ({ user, friendStatus, onFriendAction, isOwnProfile }) => {
+
+
+const ProfileHeader = ({ user, friendStatus, onFriendAction, isOwnProfile, onEdit }) => {
     const renderButton = () => {
         if (isOwnProfile) return null;
         switch (friendStatus) {
@@ -23,18 +26,24 @@ const ProfileHeader = ({ user, friendStatus, onFriendAction, isOwnProfile }) => 
         }
     };
     return (
-        <div className="bg-white rounded-lg shadow-md p-4 relative ">
-            <div className="relative h-48 bg-gray-200 rounded-t-lg"> {/* Cover Photo */} </div>
-            <div className="flex items-end -mt-16 ml-6 relative ">
-                <div className="w-32 h-32 bg-indigo-500 rounded-full border-4 border-white flex items-center justify-center text-5xl text-white font-bold">
-                    {user.name.charAt(0)}
+            <div className="bg-white rounded-lg shadow-md">
+                <div className="relative h-48 bg-gray-300 rounded-t-lg">
+                    {user.coverPhoto && <img src={user.coverPhoto} alt="Cover" className="w-full h-full object-cover rounded-t-lg" />}
                 </div>
-                <div className="ml-4 flex-grow">
-                    <h2 className="text-3xl font-bold">{user.name}</h2>
+                <div className="p-4">
+                    <div className="flex items-end -mt-20">
+                        <div className="w-32 h-32 bg-indigo-500 rounded-full border-4 border-white flex items-center justify-center text-5xl text-white font-bold relative flex-shrink-0">
+                            {user.profilePhoto ? <img src={user.profilePhoto} alt={user.name} className="w-full h-full object-cover rounded-full" /> : user.name.charAt(0)}
+                        </div>
+                        <div className="ml-4 flex-grow">
+                            <h2 className="text-3xl font-bold">{user.name}</h2>
+                        </div>
+                        <div className="self-end mb-4">
+                            {isOwnProfile ? <button onClick={onEdit} className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Edit Profile</button> : renderButton()}
+                        </div>
+                    </div>
                 </div>
-                <div className="self-end mb-4"> {renderButton()} </div>
             </div>
-        </div>
     );
 };
 
@@ -99,8 +108,9 @@ const OtherUserWatchlist = ({ symbols }) => {
 
 const ProfilePage = () => {
     const { userId } = useParams();
-    const { auth } = useContext(AuthContext);
+    const { auth,updateUser } = useContext(AuthContext);
     const [profileData, setProfileData] = useState(null);
+     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('posts');
     const isOwnProfile = auth.user?._id === userId;
@@ -118,6 +128,16 @@ const ProfilePage = () => {
         fetchProfile();
     }, [auth.token, userId]);
 
+    const handleProfileUpdate = (updatedPhotos) => {
+        // Update local page state for instant UI change
+        setProfileData(prevData => ({
+            ...prevData,
+            user: { ...prevData.user, ...updatedPhotos }
+        }));
+        // Update global auth context so Navbar also updates
+        updateUser(updatedPhotos);
+    };
+
     const handleFriendAction = async () => {
         if (!auth.token || !userId) return;
         try {
@@ -134,12 +154,13 @@ const ProfilePage = () => {
     if (loading || !profileData) return <div className="min-h-screen bg-slate-100"><Navbar /><div className="text-center mt-20">Loading...</div></div>;
 
     const { user, posts, friends, watchlist } = profileData;
-
+    
     return (
+        <>
         <div className="min-h-screen bg-slate-100">
             <Navbar />
             <div className="container mx-auto p-4 mt-4 max-w-4xl">
-                <ProfileHeader user={user} friendStatus={profileData.friendStatus} onFriendAction={handleFriendAction} isOwnProfile={isOwnProfile} />
+                <ProfileHeader user={user} friendStatus={profileData.friendStatus} onFriendAction={handleFriendAction} isOwnProfile={isOwnProfile} onEdit={() => setIsEditModalOpen(true)} />
                 
                 <div className="bg-white rounded-lg shadow-md mt-6 p-4">
                     <div className="flex border-b">
@@ -158,7 +179,11 @@ const ProfilePage = () => {
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 {friends.map(friend => (
                                     <div key={friend._id} className="text-center border rounded-lg p-4">
-                                        <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-2 flex items-center justify-center font-bold text-2xl">{friend.name.charAt(0)}</div>
+                                        {friend.profilePhoto ? (
+                                            <img src={friend.profilePhoto} alt={friend.name} className="w-20 h-20 rounded-full mx-auto mb-2 object-cover" />
+                                        ) : (
+                                            <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-2 flex items-center justify-center font-bold text-2xl">{friend.name.charAt(0)}</div>
+                                        )}
                                         <Link to={`/profile/${friend._id}`} className="font-semibold hover:underline">{friend.name}</Link>
                                     </div>
                                 ))}
@@ -171,6 +196,8 @@ const ProfilePage = () => {
                 </div>
             </div>
         </div>
+        {isEditModalOpen && <EditProfileModal user={user} onClose={() => setIsEditModalOpen(false)} onUpdate={handleProfileUpdate} />}
+        </>                
     );
 };
 export default ProfilePage;

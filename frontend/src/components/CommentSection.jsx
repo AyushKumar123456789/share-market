@@ -26,9 +26,13 @@ const CommentSection = ({ post, comments, setComments }) => {
             <div className="space-y-3 mb-4">
                 {comments.map(comment => (
                     <div key={comment._id} className="flex items-start space-x-3 text-sm">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center font-bold">
-                            {comment.user.name.charAt(0)}
-                        </div>
+                        {comment.user.profilePhoto ? (
+                            <img src={comment.user.profilePhoto} alt={comment.user.name} className="w-8 h-8 rounded-full flex-shrink-0 object-cover" />
+                        ) : (
+                            <div className="w-8 h-8 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center font-bold">
+                                {comment.user.name.charAt(0)}
+                            </div>
+                        )}
                         <div className="bg-gray-100 rounded-lg p-2 flex-grow">
                             <Link to={`/profile/${comment.user._id}`} className="font-semibold hover:underline">{comment.user.name}</Link>
                             <p className="text-gray-700">{comment.text}</p>
@@ -39,9 +43,13 @@ const CommentSection = ({ post, comments, setComments }) => {
 
             {/* Comment input form with Send button */}
             <form onSubmit={handleSubmitComment} className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-indigo-500 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-white">
-                    {auth.user.name.charAt(0)}
-                </div>
+                {auth.user.profilePhoto ? (
+                    <img src={auth.user.profilePhoto} alt={auth.user.name} className="w-8 h-8 rounded-full flex-shrink-0 object-cover" />
+                ) : (
+                    <div className="w-8 h-8 bg-indigo-500 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-white">
+                        {auth.user.name.charAt(0)}
+                    </div>
+                )}
                 <input
                     type="text"
                     value={newComment}

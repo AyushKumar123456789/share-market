@@ -5,6 +5,7 @@ const Watchlist = require('../models/watchlist');
 const Notification = require('../models/notification');
 const auth = require('../middleware/auth');
 const Post = require('../models/post');
+const upload = require('../config/cloudinaryConfig');
 
 
 // Send a friend request
@@ -73,7 +74,7 @@ router.post('/friend-request/decline/:senderId', auth, async (req, res) => {
 // Get friend requests for current user
 router.get('/friend-requests', auth, async (req, res) => {
     try {
-        const user = await User.findById(req.userId).populate('friendRequests', 'name');
+        const user = await User.findById(req.userId).populate('friendRequests', 'name profilePhoto');
         res.json(user.friendRequests);
     } catch (error) { res.status(500).json({ message: 'Server Error' }); }
 });
@@ -109,7 +110,9 @@ router.get('/suggestions', auth, async (req, res) => { // This method complexity
 
         for (let otherUser of otherUsers) {
             // Check if they are already friends
-            if (currentUser.friends.includes(otherUser._id)) continue;
+            if (currentUser.friends.includes(otherUser._id)) {
+                continue;
+            }
 
             const otherUserWatchlist = await Watchlist.findOne({ user: otherUser._id });
             if (!otherUserWatchlist) continue;
@@ -118,9 +121,17 @@ router.get('/suggestions', auth, async (req, res) => { // This method complexity
             const commonStocks = currentUserWatchlist.stocks.filter(stock => otherUserWatchlist.stocks.includes(stock));
 
             if (commonStocks.length > 0) {
+                let friendStatus = 'not_friends';
+                if (otherUser.friendRequests.includes(req.userId)) {
+                    friendStatus = 'request_sent';
+                } else if (currentUser.friendRequests.includes(otherUser._id)) {
+                    friendStatus = 'request_received';
+                }
+
                 suggestions.push({
-                    user: { _id: otherUser._id, name: otherUser.name },
-                    commonStocks: commonStocks.length
+                    user: otherUser,
+                    commonStocks: commonStocks.length,
+                    friendStatus: friendStatus
                 });
             }
         }
@@ -143,8 +154,8 @@ router.get('/profile/:userId', auth, async (req, res) => {
             return res.status(404).json({ message: 'User not found.' });
         }
 
-        const posts = await Post.find({ user: req.params.userId }).sort({ createdAt: -1 }).populate('user', 'name');
-        const friends = await User.findById(req.params.userId).populate('friends', 'name');
+        const posts = await Post.find({ user: req.params.userId }).sort({ createdAt: -1 }).populate('user', 'name profilePhoto');
+        const friends = await User.findById(req.params.userId).populate('friends', 'name profilePhoto');
         const watchlist = await Watchlist.findOne({ user: req.params.userId });
 
         // Determine friend status with the logged-in user
@@ -176,13 +187,38 @@ router.get('/profile/:userId', auth, async (req, res) => {
 router.get('/friends', auth, async (req, res) => {
     try {
         // Find the logged-in user and populate their friends list
-        const user = await User.findById(req.userId).populate('friends', 'name');
+        const user = await User.findById(req.userId).populate('friends', 'name profilePhoto');
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
         res.json(user.friends);
     } catch (error) {
         console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+
+// Upload a profile photo
+router.post('/upload-profile-photo', auth, upload.single('profilePhoto'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'No file uploaded.' });
+        const user = await User.findByIdAndUpdate(req.userId, { profilePhoto: req.file.path }, { new: true });
+        res.json({ message: 'Profile photo uploaded successfully.', profilePhoto: user.profilePhoto });
+    } catch (error) {
+        console.error("Profile photo upload error:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
+// Upload a cover photo
+router.post('/upload-cover-photo', auth, upload.single('coverPhoto'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: 'No file uploaded.' });
+        const user = await User.findByIdAndUpdate(req.userId, { coverPhoto: req.file.path }, { new: true });
+        res.json({ message: 'Cover photo uploaded successfully.', coverPhoto: user.coverPhoto });
+    } catch (error) {
+        console.error("Cover photo upload error:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 });

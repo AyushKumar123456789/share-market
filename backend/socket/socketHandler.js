@@ -51,8 +51,8 @@ const initializeSocket = (server) => {
                 await Promise.all([newMessage.save(), conversation.save()]);
                 
                 // 4. Populate the message with sender info for the frontend
-                const populatedMessage = await Message.findById(newMessage._id).populate('sender', 'name');
-                const populatedConversation = await Conversation.findById(conversation._id).populate('participants', 'name');
+                const populatedMessage = await Message.findById(newMessage._id).populate('sender', 'name profilePhoto');
+                const populatedConversation = await Conversation.findById(conversation._id).populate('participants', 'name profilePhoto');
 
                 // 5. Emit the new message to the recipient and sender
                 const recipientSocketId = userSocketMap[recipient];

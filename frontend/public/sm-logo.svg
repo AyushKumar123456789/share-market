@@ -1,0 +1,22 @@
+<!-- Modern SM logo mixing letters and share market/money theme -->
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="16" fill="url(#bgGradient)"/>
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#41D1FF"/>
+      <stop offset="1" stop-color="#BD34FE"/>
+    </linearGradient>
+    <linearGradient id="smGradient" x1="16" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00C853"/>
+      <stop offset="1" stop-color="#FFD600"/>
+    </linearGradient>
+  </defs>
+  <!-- S letter stylized as a dollar sign -->
+  <text x="10" y="44" font-family="Montserrat, Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#smGradient)">$</text>
+  <!-- M letter stylized as a stock market upward arrow -->
+  <path d="M28 44 L32 28 L36 44 L40 32 L44 44" stroke="#FFD600" stroke-width="3" fill="none" />
+  <!-- Candlestick chart bars for share market theme -->
+  <rect x="48" y="30" width="3" height="14" rx="1.5" fill="#00C853" />
+  <rect x="54" y="36" width="3" height="8" rx="1.5" fill="#FFD600" />
+  <rect x="42" y="38" width="3" height="6" rx="1.5" fill="#41D1FF" />
+</svg>

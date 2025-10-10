@@ -76,7 +76,9 @@ const Navbar = () => {
         <header className="bg-white shadow-md sticky top-0 z-50">
             <div className="container mx-auto px-4 flex justify-between items-center h-16">
                 <div className="flex items-center space-x-2">
-                    <Link to="/" className="text-2xl font-bold text-indigo-600 flex-shrink-0">S</Link>
+                    <Link to="/" className="flex-shrink-0">
+                        <img src="/sm-logo.svg" alt="Share Market Logo" className="h-10 w-10" />
+                    </Link>
                     <div className="relative">
                         <input type="text" placeholder="Search StockFolio" className="bg-gray-100 rounded-full py-2 pl-4 pr-4 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500" value={searchQuery} onChange={onSearchChange} onFocus={() => setIsSearchFocused(true)} onBlur={() => setTimeout(() => setIsSearchFocused(false), 150)} />
                         {isSearchFocused && searchQuery && (

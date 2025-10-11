@@ -6,6 +6,7 @@ import CreatePost from '../components/CreatePost';
 import Feed from '../components/Feed';
 import Watchlist from '../components/Watchlist';
 import Suggestions from '../components/Suggestions';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const DashboardPage = () => {
     const { auth } = useContext(AuthContext);
@@ -30,12 +31,18 @@ const DashboardPage = () => {
                        {/* Future Left Sidebar for navigation links */}
                     </aside>
                     <div className="col-span-12 lg:col-span-6">
-                        <CreatePost onPostCreated={handlePostCreated} />
-                        <Feed key={refreshFeed} />
+                        <ErrorBoundary>
+                            <CreatePost onPostCreated={handlePostCreated} />
+                            <Feed key={refreshFeed} />
+                        </ErrorBoundary>
                     </div>
                     <aside className="hidden lg:block lg:col-span-3">
-                        <Watchlist />
-                        <Suggestions />
+                        <ErrorBoundary>
+                            <Watchlist />
+                        </ErrorBoundary>
+                        <ErrorBoundary>
+                            <Suggestions />
+                        </ErrorBoundary>
                     </aside>
                 </div>
             </main>

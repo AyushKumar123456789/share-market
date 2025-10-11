@@ -24,7 +24,7 @@ const Watchlist = () => {
             setStocks(stocksWithPrices);
         } catch (error) {
             console.error("Failed to fetch stock prices", error);
-            setStocks(stockSymbols.map(symbol => ({ symbol, price: '--.--', change: 0, changePercent: 0 })));
+            setStocks(stockSymbols.map(symbol => ({ symbol, price: '--NA--', change: 0, changePercent: 0 })));
         }
     }, []);
 
@@ -122,7 +122,7 @@ const Watchlist = () => {
                                     </p>
                                 </div>
                                 <div className="flex items-center">
-                                    <span className="font-semibold text-gray-800 mr-4">₹{stock.price ? stock.price.toFixed(2) : '--.--'}</span>
+                                    <span className="font-semibold text-gray-800 mr-4">₹{stock.price ? stock.price : 'Error fetching price'}</span>
                                     <button onClick={() => handleDeleteStock(stock.symbol)} className="text-red-500 hover:text-red-700">
                                         &times;
                                     </button>

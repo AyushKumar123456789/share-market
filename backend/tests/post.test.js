@@ -6,7 +6,12 @@ const postRoutes = require('../routes/posts');
 const User = require('../models/user');
 const Post = require('../models/post');
 const Comment = require('../models/comment');
+const sendEmail = require('../utils/sendEmail');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
+
+// Mock the sendEmail utility
+jest.mock('../utils/sendEmail', () => jest.fn());
 
 const app = express();
 app.use(express.json());
@@ -23,7 +28,7 @@ let userId;
 let postId;
 
 beforeAll(async () => {
-  const url = process.env.MONGO_URI_TEST;
+  const url = process.env.MONGO_URI_TEST || 'mongodb://localhost:27017/test-db';
   await mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
 });
 
@@ -31,11 +36,21 @@ beforeEach(async () => {
   await User.deleteMany({});
   await Post.deleteMany({});
   await Comment.deleteMany({});
+  jest.clearAllMocks();
 
-  // Create user and get token
-  const res = await request(app).post('/auth/signup').send(testUser);
-  token = res.body.token;
-  const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+  // Create user and get token using the OTP flow
+  let otp;
+  sendEmail.mockImplementation(async (options) => {
+    otp = options.text.match(/(\d{6})/)[0];
+  });
+
+  const sendOtpRes = await request(app).post('/auth/send-otp').send(testUser);
+  const { signupToken } = sendOtpRes.body;
+
+  const verifyRes = await request(app).post('/auth/verify-otp').send({ signupToken, otp });
+  token = verifyRes.body.token;
+
+  const payload = jwt.verify(token, 'secret');
   userId = payload.id;
 
   // Create a post

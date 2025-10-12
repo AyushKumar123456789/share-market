@@ -2,17 +2,18 @@ const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('../routes/auth');
-const postRoutes = require('../routes/posts');
 const User = require('../models/user');
-const watchlist = require('../models/watchlist');
-const post = require('../models/post');
+const Watchlist = require('../models/watchlist');
+const sendEmail = require('../utils/sendEmail');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
+
+// Mock the sendEmail utility
+jest.mock('../utils/sendEmail', () => jest.fn());
 
 const app = express();
 app.use(express.json());
 app.use('/auth', authRoutes);
-app.use('/posts', postRoutes);
-
 
 const testUser = {
   name: 'Test User',
@@ -21,57 +22,121 @@ const testUser = {
 };
 
 let token;
-// Runs ONCE before all tests
+
 beforeAll(async () => {
-  // It's crucial to use a separate database for testing
-  const url = process.env.MONGO_URI_TEST;
+  const url = process.env.MONGO_URI_TEST || 'mongodb://localhost:27017/test-db';
   await mongoose.connect(url);
 });
 
-// Runs before each test
-beforeEach(async () => {
-  // Clean up the database by deleting all users
+afterEach(async () => {
   await User.deleteMany({});
+  await Watchlist.deleteMany({});
+  jest.clearAllMocks(); // Clear mocks after each test
 });
 
-// Runs ONCE after all tests are finished
-afterAll(async () => {0
-  // Close the database connection
-  await User.deleteMany({});
-  await watchlist.deleteMany({});
-  await post.deleteMany({});
+afterAll(async () => {
   await mongoose.connection.close();
 });
 
 describe('Auth Routes', () => {
-  it('should signup a new user and return a token', async () => {
-    const res = await request(app)
-    .post('/auth/signup')
-    .send(testUser);
-    token = res.body.token; // Save the token
-    expect(res.statusCode).toEqual(201);
-    expect(res.body).toHaveProperty('token');
-  });
-  
-  it('should not signup an existing user', async () => {
-    await request(app).post('/auth/signup').send(testUser);
-    // This test now relies on the user created in the previous test
-    const res = await request(app)
-        .post('/auth/signup')
+  describe('OTP Signup Flow', () => {
+    it('should send an OTP and return a signupToken', async () => {
+      const res = await request(app)
+        .post('/auth/send-otp')
         .send(testUser);
 
-    expect(res.statusCode).toEqual(400);
-    expect(res.body.message).toBe('User already exists');
-  });
-  
-  it('should login an existing user and return a token', async () => {
-    await request(app).post('/auth/signup').send(testUser);
-    const res = await request(app)
-      .post('/auth/login')
-      .send({email: testUser.email, password: testUser.password});
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty('signupToken');
+      expect(sendEmail).toHaveBeenCalledTimes(1);
+    });
 
-    token = res.body.token;
-    expect(res.statusCode).toEqual(200);
-    expect(res.body).toHaveProperty('token');
+    it('should verify OTP and create a new user', async () => {
+      let otp;
+      // Capture the OTP from the mocked email
+      sendEmail.mockImplementation(async (options) => {
+        otp = options.text.match(/(\d{6})/)[0];
+      });
+
+      const sendOtpRes = await request(app)
+        .post('/auth/send-otp')
+        .send(testUser);
+      
+      const { signupToken } = sendOtpRes.body;
+
+      const verifyRes = await request(app)
+        .post('/auth/verify-otp')
+        .send({ signupToken, otp });
+
+      expect(verifyRes.statusCode).toEqual(201);
+      expect(verifyRes.body).toHaveProperty('token');
+      token = verifyRes.body.token;
+
+      const dbUser = await User.findOne({ email: testUser.email });
+      expect(dbUser).not.toBeNull();
+      expect(dbUser.isEmailVerified).toBe(true);
+    });
+
+    it('should fail to verify with an invalid OTP', async () => {
+        const sendOtpRes = await request(app)
+            .post('/auth/send-otp')
+            .send(testUser);
+        
+        const { signupToken } = sendOtpRes.body;
+
+        const verifyRes = await request(app)
+            .post('/auth/verify-otp')
+            .send({ signupToken, otp: '000000' }); // Invalid OTP
+
+        expect(verifyRes.statusCode).toEqual(400);
+        expect(verifyRes.body.message).toBe('Invalid OTP');
+    });
+
+    it('should not send OTP if user is already verified', async () => {
+        // First, create a verified user
+        const user = new User({ ...testUser, isEmailVerified: true });
+        await user.save();
+
+        const res = await request(app)
+            .post('/auth/send-otp')
+            .send(testUser);
+
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.message).toBe('User already exists');
+        expect(sendEmail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Deprecated Signup', () => {
+    it('should return an error for the old /signup route', async () => {
+      const res = await request(app)
+        .post('/auth/signup')
+        .send(testUser);
+      
+      expect(res.statusCode).toEqual(400);
+      expect(res.body.message).toContain('deprecated');
+    });
+  });
+
+  describe('Login Flow', () => {
+    beforeEach(async () => {
+        // Create a user to be used for login tests
+        const hashedPassword = await bcrypt.hash(testUser.password, 12);
+        const user = new User({
+            name: testUser.name,
+            email: testUser.email,
+            password: hashedPassword,
+            isEmailVerified: true,
+        });
+        await user.save();
+    });
+
+    it('should login an existing user and return a token', async () => {
+      const res = await request(app)
+        .post('/auth/login')
+        .send({ email: testUser.email, password: testUser.password });
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.body).toHaveProperty('token');
+    });
   });
 });

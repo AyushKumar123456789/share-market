@@ -22,6 +22,11 @@ router.post('/add', auth, async (req, res) => {
         console.log("userId:", req.userId);
         //First see if watchlist exists
         if (!watchlist) {
+            //check if user exists
+            const user = await User.findById(req.userId);
+            if (!user) {
+                return res.status(404).json({ message: "User not found so cannot create watchlist" });
+            }
             const newWatchlist = new Watchlist({ user: req.userId, stocks: [stock.toUpperCase()] });
             await newWatchlist.save();
             return res.json(newWatchlist);
@@ -43,6 +48,11 @@ router.delete('/delete/:symbol', auth, async (req, res) => {
     const { symbol } = req.params;
     try {
         const watchlist = await Watchlist.findOne({ user: req.userId });
+        //If stock is not in watchlist
+        if (!watchlist || !watchlist.stocks.includes(symbol.toUpperCase())) {
+            return res.status(400).json({ message: "Stock not in watchlist So cannot delete" });
+        }
+        //Remove stock from watchlist
         watchlist.stocks = watchlist.stocks.filter(s => s !== symbol.toUpperCase());
         await watchlist.save();
         res.json(watchlist);

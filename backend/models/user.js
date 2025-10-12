@@ -8,6 +8,12 @@ const UserSchema = new mongoose.Schema({
   friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   profilePhoto: { type: String, default: '' }, // <-- Added
   coverPhoto: { type: String, default: '' },   // <-- Added
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
+
+
 
 module.exports = mongoose.model('User', UserSchema);

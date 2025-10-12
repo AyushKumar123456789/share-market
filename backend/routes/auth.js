@@ -5,38 +5,101 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');//change file name to user.js instead of User.js
 const Watchlist = require('../models/watchlist');
 
-// Signup
-router.post('/signup', async (req, res) => {
-  try {
-    const {name, email, password } = req.body;
-    console.log("signup route is hit!");//remove it later
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
+
+// Send OTP for signup
+router.post('/send-otp', async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        const existingUser = await User.findOne({ email });
+        if (existingUser && existingUser.isEmailVerified) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await sendEmail({
+            to: email,
+            subject: 'Your OTP for Share Market App',
+            text: `Your OTP is: ${otp}`,
+        });
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const signupDetails = { name, email, password: hashedPassword, otp };
+        
+        const signupToken = jwt.sign(signupDetails, 'secret_signup', { expiresIn: '3m' });
+
+        res.status(200).json({ message: 'OTP sent to your email.', signupToken });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error sending OTP' });
     }
+});
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+// Verify OTP and Signup
+router.post('/verify-otp', async (req, res) => {
+    try {
+        const { signupToken, otp } = req.body;
+        if (!signupToken) {
+            console.error("Verification error: Signup token not provided.");
+            return res.status(400).json({ message: "Signup token not provided." });
+        }
 
-    const newUser = new User({
-      name: name,
-      email: email,
-      password: hashedPassword,
-    });
+        let decoded;
+        try {
+            decoded = jwt.verify(signupToken, 'secret_signup');
+        } catch (err) {
+            console.error("Verification error: Invalid or expired token.", err);
+            return res.status(400).json({ message: "Invalid or expired token." });
+        }
 
-    await newUser.save();
+        if (decoded.otp !== otp) {
+            console.error("Verification error: Invalid OTP.");
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
 
-    // Create a empty watchlist for the new user
-    const watchlist = new Watchlist({ user: newUser._id, stocks: [] });
-    await watchlist.save();
+        const { name, email, password } = decoded;
 
-    const token = jwt.sign({ email: newUser.email, id: newUser._id }, 'secret', {
-      expiresIn: '1h',
-    });
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+             if (existingUser.isEmailVerified) {
+                console.error(`Signup attempt for existing verified user: ${email}`);
+                return res.status(400).json({ message: 'User already exists' });
+             }
+             console.error(`Signup attempt for existing unverified user: ${email}`);
+             return res.status(400).json({ message: 'An account with this email is pending verification or already exists.' });
+        }
 
-    res.status(201).json({ result: newUser, token });
-  } catch (error) {
-    res.status(500).json({ message: 'Error Signing Up' });
-  }
+        console.log("OTP verified. Creating new user...");
+        const newUser = new User({
+            name,
+            email,
+            password,
+            isEmailVerified: true,
+        });
+
+        await newUser.save();
+        console.log("New user saved successfully.");
+
+        const watchlist = new Watchlist({ user: newUser._id, stocks: [] });
+        await watchlist.save();
+        console.log("Watchlist created for new user.");
+
+        const token = jwt.sign({ email: newUser.email, id: newUser._id }, 'secret', {
+            expiresIn: '1h',
+        });
+
+        res.status(201).json({ result: newUser, token });
+    } catch (error) {
+        console.error("FATAL: Error during OTP verification or user creation:", error);
+        res.status(500).json({ message: 'Error verifying OTP or signing up' });
+    }
+});
+
+// Signup - Deprecated, but kept for reference or future use
+router.post('/signup', async (req, res) => {
+  return res.status(400).json({ message: "This signup route is deprecated. Please use /send-otp and /verify-otp." });
 });
 
 // Login

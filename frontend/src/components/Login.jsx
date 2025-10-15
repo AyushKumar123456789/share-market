@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import API from '../api';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -9,6 +10,28 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
+
+  //Google OAuth
+
+   const handleGoogleSuccess = async (credentialResponse) => {
+        try {
+            // Send the token from Google to our backend
+            const res = await API.post('/auth/google-login', {
+                token: credentialResponse.credential,
+            });
+
+            // On success, our backend gives us an app token. Use it to login.
+            login(res.data);
+            navigate('/');
+        } catch (error) {
+            console.error("Google Login Failed", error);
+        }
+    };
+
+    const handleGoogleError = () => {
+        console.log('Login Failed');
+    };
+
 
   const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -60,6 +83,23 @@ const Login = () => {
           </button>
         </div>
       </form>
+
+      <div className="mt-6">
+        <p className="text-center text-sm text-gray-600">Or continue with</p>
+      </div>
+      
+
+       {/* Google Button */}
+        <div className="flex justify-center">
+                <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    theme="filled_blue"
+                    shape="pill"
+                    width="300px"
+                />
+            </div>
+
        <p className="text-center mt-6 text-sm text-gray-600">
             Don't have an account?{' '}
             <Link to="/register" className="font-medium text-indigo-600 hover:underline">

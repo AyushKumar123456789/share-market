@@ -14,7 +14,10 @@ const http = require('http');
 
 
 const app = express();
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: process.env.CLIENT_URL 
+}));
 app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/notifications', notificationRoutes);

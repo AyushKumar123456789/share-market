@@ -4,9 +4,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');//change file name to user.js instead of User.js
 const Watchlist = require('../models/watchlist');
+const { OAuth2Client } = require('google-auth-library');
 
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Send OTP for signup
 router.post('/send-otp', async (req, res) => {
@@ -125,6 +127,45 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error Logging In' });
   }
+});
+
+
+// POST /auth/google-login
+
+router.post('/google-login', async (req, res) => {
+    try {
+        const { token } = req.body;
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const { name, email, picture } = ticket.getPayload();
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // If user doesn't exist, create a new one
+            user = new User({
+                googleId: ticket.getPayload().sub,
+                name,
+                email,
+                profilePhoto: picture,
+                isEmailVerified: true,
+                // No password needed for Google sign-ups
+            });
+            await user.save();
+            
+        }
+
+        // Create OUR OWN JWT for session management
+        const appToken = jwt.sign({ email: user.email, id: user._id }, 'secret', { expiresIn: '1h' });
+
+        res.status(200).json({ result: user, token: appToken });
+
+    } catch (error) {
+        console.error("Google login error:", error);
+        res.status(500).json({ message: "Google Sign-In failed. Please try again." });
+    }
 });
 
 module.exports = router;

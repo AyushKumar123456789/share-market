@@ -11,7 +11,7 @@ const auth = (req, res, next) => {
     req.userId = decodedData?.id;
     next();
   } catch (error) {
-    res.status(401).json({ message: "Authentication failed" });
+    res.status(401).json({ message: "Authentication failed. Invalid or expired token." });
   }
 };
 

@@ -83,7 +83,7 @@ router.post('/verify-otp', async (req, res) => {
 
         await newUser.save();
         console.log("New user saved successfully.");
-
+        // Create an empty watchlist for the new user
         const watchlist = new Watchlist({ user: newUser._id, stocks: [] });
         await watchlist.save();
         console.log("Watchlist created for new user.");
@@ -142,7 +142,7 @@ router.post('/google-login', async (req, res) => {
         const { name, email, picture } = ticket.getPayload();
 
         let user = await User.findOne({ email });
-
+        // If user exists, proceed to login
         if (!user) {
             // If user doesn't exist, create a new one
             user = new User({
@@ -154,6 +154,10 @@ router.post('/google-login', async (req, res) => {
                 // No password needed for Google sign-ups
             });
             await user.save();
+            // Create an empty watchlist for the new user
+            const watchlist = new Watchlist({ user: user._id, stocks: [] });
+            await watchlist.save();
+            
             
         }
 

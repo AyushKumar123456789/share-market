@@ -7,7 +7,7 @@ const auth = (req, res, next) => {
       return res.status(401).json({ message: "Authentication failed" });
     }
 
-    const decodedData = jwt.verify(token, 'secret'); // Use a stronger secret in production!
+    const decodedData = jwt.verify(token, process.env.JWT_SECRET); // Use a stronger secret in production!
     req.userId = decodedData?.id;
     next();
   } catch (error) {

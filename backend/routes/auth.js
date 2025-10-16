@@ -29,8 +29,8 @@ router.post('/send-otp', async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 12);
         const signupDetails = { name, email, password: hashedPassword, otp };
-        
-        const signupToken = jwt.sign(signupDetails, 'secret_signup', { expiresIn: '3m' });
+
+        const signupToken = jwt.sign(signupDetails, process.env.JWT_SECRET, { expiresIn: '3m' });
 
         res.status(200).json({ message: 'OTP sent to your email.', signupToken });
     } catch (error) {
@@ -50,7 +50,7 @@ router.post('/verify-otp', async (req, res) => {
 
         let decoded;
         try {
-            decoded = jwt.verify(signupToken, 'secret_signup');
+            decoded = jwt.verify(signupToken, process.env.JWT_SECRET);
         } catch (err) {
             console.error("Verification error: Invalid or expired token.", err);
             return res.status(400).json({ message: "Invalid or expired token." });
@@ -88,7 +88,7 @@ router.post('/verify-otp', async (req, res) => {
         await watchlist.save();
         console.log("Watchlist created for new user.");
 
-        const token = jwt.sign({ email: newUser.email, id: newUser._id }, 'secret', {
+        const token = jwt.sign({ email: newUser.email, id: newUser._id }, process.env.JWT_SECRET, {
             expiresIn: '1h',
         });
 
@@ -119,7 +119,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, 'secret', {
+    const token = jwt.sign({ email: existingUser.email, id: existingUser._id }, process.env.JWT_SECRET, {
       expiresIn: '24h',
     });
 
@@ -162,7 +162,7 @@ router.post('/google-login', async (req, res) => {
         }
 
         // Create OUR OWN JWT for session management
-        const appToken = jwt.sign({ email: user.email, id: user._id }, 'secret', { expiresIn: '1h' });
+        const appToken = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.status(200).json({ result: user, token: appToken });
 

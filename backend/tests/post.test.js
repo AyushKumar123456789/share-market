@@ -50,7 +50,7 @@ beforeEach(async () => {
   const verifyRes = await request(app).post('/auth/verify-otp').send({ signupToken, otp });
   token = verifyRes.body.token;
 
-  const payload = jwt.verify(token, 'secret');
+  const payload = jwt.verify(token, process.env.JWT_SECRET);
   userId = payload.id;
 
   // Create a post

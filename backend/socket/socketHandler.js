@@ -5,9 +5,17 @@ const Message = require('../models/message');
 const userSocketMap = {}; // { userId: socketId }
 
 const initializeSocket = (server) => {
+    // Allow configuring allowed client origins via env var CLIENT_URL
+    // Example: CLIENT_URL="http://localhost:5173,https://app.example.com"
+    const CLIENT_URL = process.env.CLIENT_URL
+        ? process.env.CLIENT_URL.split(',').map(s => s.trim())
+        : ["http://localhost:5173"];
+
+    console.log('Socket CORS origins:', CLIENT_URL);
+
     const io = new Server(server, {
         cors: {
-            origin: "http://localhost:5173",
+            origin: CLIENT_URL,
             methods: ["GET", "POST"]
         }
     });

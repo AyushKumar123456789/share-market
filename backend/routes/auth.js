@@ -63,7 +63,7 @@ router.post('/verify-otp', async (req, res) => {
 
         const { name, email, password } = decoded;
 
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
              if (existingUser.isEmailVerified) {
                 console.error(`Signup attempt for existing verified user: ${email}`);
@@ -76,7 +76,7 @@ router.post('/verify-otp', async (req, res) => {
         console.log("OTP verified. Creating new user...");
         const newUser = new User({
             name,
-            email,
+            email: email.toLowerCase(),
             password,
             isEmailVerified: true,
         });
@@ -109,7 +109,8 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log("login route is hit!");//remove it later
-    const existingUser = await User.findOne({ email });
+    //dont make the character case sensitive for email
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (!existingUser) {
       return res.status(404).json({ message: 'User not found' });
     }

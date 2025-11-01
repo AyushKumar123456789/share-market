@@ -1,71 +1,25 @@
-
-# name: Deploy to EC2
-
-# on:
-#   push:
-#     branches:
-#       - main # Or your deployment branch
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v3
-
-#       - name: Deploy to EC2
-#         uses: appleboy/ssh-action@v0.1.10 # Or a newer version
-#         with:
-#           host: ${{ secrets.EC2_HOST }}
-#           username: ${{ secrets.EC2_USERNAME }}
-#           key: ${{ secrets.EC2_SSH_KEY }}
-#           script: |
-#             # Execute the deployment script on the EC2 instance
-#             cd ~ # Navigate to where deploy.sh is located
-#             ./deploy.sh
-
 name: Deploy to EC2
 
 on:
   push:
     branches:
-      - main
+      - main # Or your deployment branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install SSH key and known_hosts
-        env:
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          # Write private key from secret - must include BEGIN/END lines and newlines in the secret
-          echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          # Ensure ssh config disables interactive prompts (optional)
-          printf "Host *\n    StrictHostKeyChecking no\n    UserKnownHostsFile=/dev/null\n" > ~/.ssh/config
-          chmod 600 ~/.ssh/config
-          # Optionally add host key via ssh-keyscan (if you prefer stricter checking, use known_hosts instead)
-          if [ -n "$EC2_HOST" ]; then
-            ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts || true
-          fi
-
-      - name: Copy deploy script to EC2 (optional)
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-        run: |
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./deploy.sh $EC2_USERNAME@$EC2_HOST:~/deploy.sh
-
-      - name: Run deploy script on EC2
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USERNAME@$EC2_HOST 'bash -l -s' < ./deploy.sh
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.10 # Or a newer version
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Execute the deployment script on the EC2 instance
+            cd ~ # Navigate to where deploy.sh is located
+            ./deploy.sh

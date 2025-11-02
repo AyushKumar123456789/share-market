@@ -14,7 +14,8 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 router.post('/send-otp', async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        const existingUser = await User.findOne({ email });
+        const lowerCaseEmail = email.toLowerCase();
+        const existingUser = await User.findOne({ email: lowerCaseEmail });
         if (existingUser && existingUser.isEmailVerified) {
             return res.status(400).json({ message: 'User already exists' });
         }
@@ -22,13 +23,13 @@ router.post('/send-otp', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
         await sendEmail({
-            to: email,
+            to: lowerCaseEmail,
             subject: 'Your OTP for Share Market App',
             text: `Your OTP is: ${otp}`,
         });
 
         const hashedPassword = await bcrypt.hash(password, 12);
-        const signupDetails = { name, email, password: hashedPassword, otp };
+        const signupDetails = { name, email: lowerCaseEmail, password: hashedPassword, otp };
 
         const signupToken = jwt.sign(signupDetails, process.env.JWT_SECRET, { expiresIn: '3m' });
 
@@ -141,15 +142,15 @@ router.post('/google-login', async (req, res) => {
             audience: process.env.GOOGLE_CLIENT_ID,
         });
         const { name, email, picture } = ticket.getPayload();
-
-        let user = await User.findOne({ email });
+        const emailLower = email.toLowerCase();
+        let user = await User.findOne({ email: emailLower });
         // If user exists, proceed to login
         if (!user) {
             // If user doesn't exist, create a new one
             user = new User({
                 googleId: ticket.getPayload().sub,
                 name,
-                email,
+                email: emailLower,
                 profilePhoto: picture,
                 isEmailVerified: true,
                 // No password needed for Google sign-ups
@@ -163,7 +164,7 @@ router.post('/google-login', async (req, res) => {
         }
 
         // Create OUR OWN JWT for session management
-        const appToken = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const appToken = jwt.sign({ email: emailLower, id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.status(200).json({ result: user, token: appToken });
 

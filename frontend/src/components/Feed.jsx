@@ -17,6 +17,12 @@ export const PostItem = ({ post, highlightedPost }) => {
     const [comments, setComments] = useState([]);
     const [showComments, setShowComments] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [commentCount, setCommentCount] = useState(post.commentsCount || 0);
+
+    const handleCommentUpdate = (newComments) => {
+        setComments(newComments);
+        setCommentCount(newComments.length);
+    };
 
     const handleLike = async () => {
         const newHasLiked = !hasLiked;
@@ -70,7 +76,7 @@ export const PostItem = ({ post, highlightedPost }) => {
             {post.stockSymbol && (<span className="inline-block bg-indigo-100 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-full mb-4">${post.stockSymbol}</span>)}
             <div className="flex justify-between items-center text-sm text-gray-500 mb-2">
                 <span>{likesState.length} Likes</span>
-                <span>{comments.length > 0 ? `${comments.length} Comments` : ''}</span>
+                <span>{commentCount > 0 ? `${commentCount} Comments` : ''}</span>
             </div>
             <div className="border-t border-gray-200 pt-2 flex justify-around">
                 <PostAction onClick={handleLike}>
@@ -86,7 +92,7 @@ export const PostItem = ({ post, highlightedPost }) => {
                     <span className="text-sm font-semibold">{copied ? 'Copied!' : 'Share'}</span>
                 </PostAction>
             </div>
-            {showComments && <CommentSection post={post} comments={comments} setComments={setComments} />}
+            {showComments && <CommentSection post={post} comments={comments} setComments={handleCommentUpdate} />}
         </div>
     );
 };

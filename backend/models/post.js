@@ -5,6 +5,7 @@ const PostSchema = new mongoose.Schema({
   content: { type: String, required: true },
   stockSymbol: { type: String, uppercase: true, trim: true }, // Optional: link post to a stock
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  commentsCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Post', PostSchema);

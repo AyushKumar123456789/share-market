@@ -7,7 +7,7 @@ const Comment = require('../models/comment');
 // Create a Post (Protected)
 router.post('/', auth, async (req, res) => {
   const { content, stockSymbol } = req.body;
-  const newPost = new Post({ content, stockSymbol, user: req.userId });
+  const newPost = new Post({ content, stockSymbol, user: req.userId, likes: [], commentsCount: 0 });
 
   try {
     await newPost.save();
@@ -66,11 +66,14 @@ router.post('/:id/comment', auth, async (req, res) => {
         const newComment = new Comment({
             text,
             post: req.params.id,
-            user: req.userId,
+            user: req.userId
         });
 
         await newComment.save();
 
+        // Increment commentsCount in Post model
+        await Post.findByIdAndUpdate(req.params.id, { $inc: { commentsCount: 1 } });
+        
         // Fetch all comments for the post to return to the client
         const comments = await Comment.find({ post: req.params.id }).populate('user', 'name profilePhoto coverPhoto').sort({ createdAt: 'asc' });
 
@@ -79,7 +82,6 @@ router.post('/:id/comment', auth, async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 });
-
 
 // Get all comments for a Post
 router.get('/:id/comments', auth, async (req, res) => {

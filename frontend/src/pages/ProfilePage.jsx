@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -47,73 +47,25 @@ const ProfileHeader = ({ user, friendStatus, onFriendAction, isOwnProfile, onEdi
     );
 };
 
-const OtherUserWatchlist = ({ symbols }) => {
-    const [stocks, setStocks] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    const getChangeColor = (change) => {
-        if (change > 0) return 'text-green-500';
-        if (change < 0) return 'text-red-500';
-        return 'text-gray-500';
-    };
-
-    const fetchStockPrices = useCallback(async (stockSymbols) => {
-        if (stockSymbols.length === 0) {
-            setStocks([]);
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        try {
-            const pricePromises = stockSymbols.map(symbol =>
-                API.get(`/stocks/price/${symbol}`).then(res => ({ symbol, ...res.data }))
-            );
-            const stocksWithPrices = await Promise.all(pricePromises);
-            setStocks(stocksWithPrices);
-        } catch (error) {
-            console.error("Failed to fetch stock prices", error);
-            setStocks(stockSymbols.map(symbol => ({ symbol, price: '--.--', change: 0, changePercent: 0 })));
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchStockPrices(symbols);
-    }, [symbols, fetchStockPrices]);
-
-    if (loading) return <p className="text-sm text-gray-500">Loading watchlist...</p>;
-
-    return (
-        <ul className="space-y-3">
-            {stocks.length > 0 ? (
-                stocks.map(stock => (
-                    <li key={stock.symbol} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded-lg">
-                        <div>
-                            <span className="font-bold text-gray-700">{stock.symbol}</span>
-                            <p className={`text-xs ${getChangeColor(stock.change)}`}>
-                                {stock.change ? stock.change.toFixed(2) : '0.00'} ({stock.changePercent ? (stock.changePercent * 100).toFixed(2) : '0.00'}%)
-                            </p>
-                        </div>
-                        <span className="font-semibold text-gray-800">${stock.price ? stock.price.toFixed(2) : '--.--'}</span>
-                    </li>
-                ))
-            ) : (
-                <p className="text-sm text-gray-500">This user's watchlist is empty.</p>
-            )}
-        </ul>
-    );
-};
 
 
 const ProfilePage = () => {
     const { userId } = useParams();
+    const location = useLocation();
     const { auth,updateUser } = useContext(AuthContext);
     const [profileData, setProfileData] = useState(null);
      const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('posts');
     const isOwnProfile = auth.user?._id === userId;
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const tab = params.get('tab');
+        if (tab) {
+            setActiveTab(tab);
+        }
+    }, [location.search]);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -189,9 +141,7 @@ const ProfilePage = () => {
                                 ))}
                             </div>
                         )}
-                        {activeTab === 'watchlist' && (
-                            isOwnProfile ? <Watchlist /> : <OtherUserWatchlist symbols={watchlist} />
-                        )}
+                        {activeTab === 'watchlist' && (isOwnProfile ? <Watchlist /> : <Watchlist symbols={watchlist} />)}
                     </div>
                 </div>
             </div>

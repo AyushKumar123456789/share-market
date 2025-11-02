@@ -3,7 +3,8 @@ import API from '../api';
 import { AuthContext } from '../context/AuthContext';
 import useDebounce from '../hooks/useDebounce';
 
-const Watchlist = () => {
+// MODIFIED: Accept an optional 'symbols' prop
+const Watchlist = ({ symbols }) => {
     const [stocks, setStocks] = useState([]);
     const [newStock, setNewStock] = useState('');
     const [suggestions, setSuggestions] = useState([]);
@@ -11,8 +12,12 @@ const Watchlist = () => {
     const { auth } = useContext(AuthContext);
     const debouncedSearchTerm = useDebounce(newStock, 300);
 
+    // NEW: Check if we are viewing the logged-in user's watchlist
+    // If 'symbols' prop is passed, it's NOT our own list.
+    const isOwnWatchlist = !symbols;
+
     const fetchStockPrices = useCallback(async (stockSymbols) => {
-        if (stockSymbols.length === 0) {
+        if (!stockSymbols || stockSymbols.length === 0) {
             setStocks([]);
             return;
         }
@@ -28,17 +33,14 @@ const Watchlist = () => {
         }
     }, []);
 
+    // MODIFIED: This effect now handles BOTH cases
     useEffect(() => {
         const fetchWatchlist = async () => {
             setLoading(true);
             try {
                 const res = await API.get('/watchlist');
                 const stockSymbols = res.data.stocks || [];
-                if (stockSymbols.length > 0) {
-                    await fetchStockPrices(stockSymbols);
-                } else {
-                    setStocks([]);
-                }
+                await fetchStockPrices(stockSymbols);
             } catch (error) {
                 console.error("Failed to fetch watchlist", error);
                 setStocks([]);
@@ -47,11 +49,20 @@ const Watchlist = () => {
             }
         };
 
-        if (auth.token) {
-            fetchWatchlist();
+        if (isOwnWatchlist) {
+            // Scenario A: Logged-in user's list
+            if (auth.token) {
+                fetchWatchlist();
+            }
+        } else {
+            // Scenario B: Other user's list (symbols prop is provided)
+            setLoading(true);
+            fetchStockPrices(symbols).finally(() => setLoading(false));
         }
-    }, [auth.token, fetchStockPrices]);
+        // MODIFIED: Dependencies reflect both cases
+    }, [isOwnWatchlist, symbols, auth.token, fetchStockPrices]);
 
+    // MODIFIED: Only fetch suggestions if it's our own watchlist
     useEffect(() => {
         const fetchSuggestions = async () => {
             if (debouncedSearchTerm) {
@@ -67,8 +78,11 @@ const Watchlist = () => {
             }
         };
 
-        fetchSuggestions();
-    }, [debouncedSearchTerm]);
+        // Only run if it's our list and we're typing
+        if (isOwnWatchlist) {
+            fetchSuggestions();
+        }
+    }, [debouncedSearchTerm, isOwnWatchlist]);
 
     const handleAddStock = async (e) => {
         e.preventDefault();
@@ -105,7 +119,7 @@ const Watchlist = () => {
         return 'text-gray-500';
     };
 
-    return (
+ return (
         <div className="bg-white p-4 rounded-xl shadow mb-6">
             <h3 className="font-bold text-lg mb-4 text-gray-800">Watchlist</h3>
             {loading ? (
@@ -123,45 +137,55 @@ const Watchlist = () => {
                                 </div>
                                 <div className="flex items-center">
                                     <span className="font-semibold text-gray-800 mr-4">₹{stock.price ? stock.price : 'Error fetching price'}</span>
-                                    <button onClick={() => handleDeleteStock(stock.symbol)} className="text-red-500 hover:text-red-700">
-                                        &times;
-                                    </button>
+                                    {/* MODIFIED: Only show delete button if it's our list */}
+                                    {isOwnWatchlist && (
+                                        <button onClick={() => handleDeleteStock(stock.symbol)} className="text-red-500 hover:text-red-700">
+                                            &times;
+                                        </button>
+                                    )}
                                 </div>
                             </li>
                         ))
                     ) : (
-                        <p className="text-sm text-gray-500">Your watchlist is empty.</p>
+                        // MODIFIED: Dynamic empty message
+                        <p className="text-sm text-gray-500">
+                            {isOwnWatchlist ? "Your watchlist is empty." : "This user's watchlist is empty."}
+                        </p>
                     )}
                 </ul>
             )}
-            <form onSubmit={handleAddStock} className="flex flex-col space-y-2 border-t pt-4 relative">
-                <div className="flex space-x-2">
-                    <input
-                        type="text"
-                        value={newStock}
-                        onChange={(e) => setNewStock(e.target.value)}
-                        placeholder="Add stock (e.g. Reliance)"
-                        className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-transparent"
-                        autoComplete="off"
-                    />
-                    <button type="submit" className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-200 focus:outline-none transition-colors">
-                        Add
-                    </button>
-                </div>
-                {suggestions.length > 0 && (
-                    <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
-                        {suggestions.map(suggestion => (
-                            <li 
-                                key={suggestion.symbol} 
-                                className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-sm"
-                                onClick={() => handleSuggestionClick(suggestion.symbol)}
-                            >
-                                {suggestion.symbol} - <span className="text-gray-500">{suggestion.name}</span>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </form>
+            
+            {/* MODIFIED: Only show the 'Add Stock' form if it's our list */}
+            {isOwnWatchlist && (
+                <form onSubmit={handleAddStock} className="flex flex-col space-y-2 border-t pt-4 relative">
+                    <div className="flex space-x-2">
+                        <input
+                            type="text"
+                            value={newStock}
+                            onChange={(e) => setNewStock(e.target.value)}
+                            placeholder="Add stock (e.g. Reliance)"
+                            className="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-transparent"
+                            autoComplete="off"
+                        />
+                        <button type="submit" className="bg-indigo-100 text-indigo-700 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-200 focus:outline-none transition-colors">
+                            Add
+                        </button>
+                    </div>
+                    {suggestions.length > 0 && (
+                        <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                            {suggestions.map(suggestion => (
+                                <li 
+                                    key={suggestion.symbol} 
+                                    className="px-4 py-2 cursor-pointer hover:bg-gray-100 text-sm"
+                                    onClick={() => handleSuggestionClick(suggestion.symbol)}
+                                >
+                                    {suggestion.symbol} - <span className="text-gray-500">{suggestion.name}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </form>
+            )}
         </div>
     );
 };
